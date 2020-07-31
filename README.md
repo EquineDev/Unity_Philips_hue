@@ -17,5 +17,5 @@ Configuration Setup
 # 3rd Party 
 The following third party licenses are used 
 
-MiniJson Copyright (c) 2013 Calvin Rien, MIT license, see(https://gist.github.com/darktable/1411710)
-unity-hue Copyright (c) 2015 Marc Teyssier, MIT license, see(https://github.com/marcteys/unity-hue)
+* MiniJson Copyright (c) 2013 Calvin Rien, MIT license, see(https://gist.github.com/darktable/1411710)
+* unity-hue Copyright (c) 2015 Marc Teyssier, MIT license, see(https://github.com/marcteys/unity-hue)
