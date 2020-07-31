@@ -172,6 +172,7 @@ namespace Hue
             request.Method = HueCommonNames.Put;
 
             //get color state ready for hue in HSV in JSON format
+            _state.Clear();
             Vector3 hsv = HSVFromRGB.ConvertToHSV(color);
             _state[HueCommonNames.Put] = true;
             _state[HueCommonNames.Hue] = (int)(hsv.x / 360.0f * 65535.0f);
@@ -201,7 +202,7 @@ namespace Hue
             HttpWebRequest request = (HttpWebRequest)WebRequest.Create(DevicePath);
             Debug.Log(DevicePath);
             request.Method = HueCommonNames.Put;
-
+            _state.Clear();
             _state[HueCommonNames.Put] = turnOn;
 
             byte[] data = System.Text.Encoding.ASCII.GetBytes(Json.Serialize(_state));
@@ -219,7 +220,7 @@ namespace Hue
             HttpWebRequest request = (HttpWebRequest)WebRequest.Create(DevicePath);
             Debug.Log(DevicePath);
             request.Method = HueCommonNames.Put;
-
+            _state.Clear();
             _state[HueCommonNames.Put] = true;
             _state[HueCommonNames.Bri] = brightness;
 
