@@ -70,9 +70,9 @@ namespace Hue
         /// <returns>Returns Hue Lamp Light</returns>
         public HueLamp GetLight(string Light)
         {
-            if (!_hueLights.ContainsKey(Light))
+            if (!_hueLights.ContainsKey(Light) || _hueLights[Light].UseLight)
             {
-                Debug.LogWarning(Light + " couldn't be deleted because hue light doesn't exist");
+                Debug.LogWarning(Light + " couldn't be deleted because hue light doesn't exist or can't be used");
             }
             return _hueLights[Light];
         }
