@@ -32,7 +32,7 @@ Configuration Setup
 * Username - User Name for Hue Hub
 * Instance - Get Singleton instance of  Hue Hub bridge
 
-# Hue Bridge Methods
+# Hue Lamp Methods
 
 * Setup - Takes in string of the path and key to setup hue light.
 * FlashToAColor - Takes in a color, speed in float of flash and in of number of flashes
