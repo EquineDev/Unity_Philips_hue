@@ -1,5 +1,5 @@
 # Unity_Philips_hue
-Philips Hue Lighting Intergration for Unity 2019.4.X
+Philips Hue Lighting Integration for Unity 2019.4.X
 
 Require Philips Hue Hub
 
@@ -9,7 +9,7 @@ Configuration Setup
 * Open the the Example Scene Or Drag the Hue Bridge prefab in the prefab folder into your scene
 * In the HostName enter your IP address of your Hue Hub.
 * Press the link button on the  Hue Hub then click on create new user (Note: Hue Hub Bridge API 1.31 removed API calls to remove users from whitelist, you need to go to the  https://account.meethue.com/apps to remove users now)
-* Click on Dicovery Lights to find all lights connect to  Hue Hub
+* Click on Discovery Lights to find all lights connect to  Hue Hub
 * Click on Save Config to save  Hue Hub configuration to a Json file in StreamingAssets folder.
 
 # Hue Bridge Properties
