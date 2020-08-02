@@ -35,7 +35,7 @@ Configuration Setup
 # Hue Lamp Methods
 
 * Setup - Takes in string of the path and key to setup hue light.
-* FlashToAColor - Takes in a color, speed in float of flash and in of number of flashes
+* FlashToAColor - Takes in a color, speed in float of flash and int of number of flashes
 * SetBrightness - Takes in a int of brightness to set the brightness of the hue light
 * SetColor -  Takes in a color to be set to the color of the hue light
 * TurnOnOffLight - Takes in a bool to toggle the the hue light
