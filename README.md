@@ -29,8 +29,10 @@ Configuration Setup
 # Hue Lamp Properties
 
 * UseLight - Use this light or not
-* Username - User Name for Hue Hub
-* Instance - Get Singleton instance of  Hue Hub bridge
+* TurnedOn  - get is our light currently turned on
+* CurrentColor  - Get current light color
+* DevicePath  - Get path to device
+* Key - Get key of device
 
 # Hue Lamp Methods
 
