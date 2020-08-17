@@ -3,6 +3,8 @@ Philips Hue Lighting Integration for Unity 2019.4.X
 
 Require Philips Hue Hub
 
+Don't enable Ableism
+
 # Setup
 Configuration Setup
 
