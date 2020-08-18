@@ -20,7 +20,7 @@ Configuration Setup
 * Username - User Name for Hue Hub
 * Instance - Get Singleton instance of  Hue Hub bridge
 
-# Hue Bridge Methods
+# Hue Bridge Functions
 
 * GetLight - Takes in string of the name of the hue light in the Hue Hub bridge.
 * DeleteLight - Takes in as tring of the name of the hue light in the Hue Hub bridge to be deleted
@@ -36,7 +36,7 @@ Configuration Setup
 * DevicePath  - Get path to device
 * Key - Get key of device
 
-# Hue Lamp Methods
+# Hue Lamp Functions
 
 * Setup - Takes in string of the path and key to setup hue light.
 * FlashToAColor - Takes in a color, speed in float of flash and int of number of flashes
