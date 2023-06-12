@@ -1,4 +1,4 @@
-﻿/* Copyright (c) 2020 Scott Tongue
+﻿/* Copyright (c) 2023 Scott Tongue
  *
  * 
  * Heavily modifed based on Marc Teyssier Hue Light intergration
@@ -33,9 +33,12 @@ using System.Collections.Generic;
 using System.Net;
 using MiniJSON;
 using System;
+using System.Linq;
+using System.Text;
 
 namespace Hue
 {
+ 
     public class HueBridge : Singleton<HueBridge>
     {
         public Action FinishConfiguringHue = delegate { };
@@ -48,8 +51,12 @@ namespace Hue
         public string Username { get;  set; }
 
         private Dictionary<string, HueLamp> _hueLights = new Dictionary<string, HueLamp>();
-        private string _stringURI =null;
-        private const string  _type = "type", _name = "name", _extend = "Extended color light", _state = "/state", _configFile = "HueConfig.JSON";
+        private string _stringURI = null;
+        private const string _type = "type";
+        private const string _name = "name";
+        private const string _extend = "Extended color light";
+        private const string _state = "/state";
+        private const string _configFile = "HueConfig.JSON";
 
         #region UnityAPI
         protected override void Init()
@@ -101,40 +108,41 @@ namespace Hue
         /// </summary>
         public void SetupNewUser()
         {
-           
-
-            _stringURI = "http://" + HostName + "/api/";
-            HttpWebRequest request = (HttpWebRequest)WebRequest.Create(_stringURI);
+            string apiUri = $"http://{HostName}/api/";
+            HttpWebRequest request = (HttpWebRequest)WebRequest.Create(apiUri);
             request.Method = "POST";
-           
 
-            Dictionary<string, object> user = new Dictionary<string, object>();
-            user.Add("devicetype", "MyHueUnityApp");
-
-            byte[] data = System.Text.Encoding.ASCII.GetBytes(Json.Serialize(user));
-            request.ContentLength = data.Length;
-            Stream s = request.GetRequestStream();
-            s.Write(data, 0, data.Length);
-          
-            HttpWebResponse response = (HttpWebResponse)request.GetResponse();
-
-            s = response.GetResponseStream();
-
-            StreamReader sr = new StreamReader(s, System.Text.Encoding.UTF8);
-            string name = sr.ReadToEnd();
-            sr.Close();
-            s.Close();
-            if (name.Contains("username"))
+            Dictionary<string, object> user = new Dictionary<string, object>
             {
-                
-                name = name.Substring(name.IndexOf(":"+'\u0022'));
-                name = name.Remove(0, 2);
-                name = name.Remove(name.Length - 4);
-                Username = name;
-                Debug.Log("User created");
-                return;
+                { "devicetype", "MyHueUnityApp" }
+            };
+
+            byte[] requestData = Encoding.ASCII.GetBytes(Json.Serialize(user));
+            request.ContentLength = requestData.Length;
+
+            using (Stream requestStream = request.GetRequestStream())
+            {
+                requestStream.Write(requestData, 0, requestData.Length);
             }
-            Debug.Log(" User Couldnt be Created please press link on Hue Hub!!");
+
+            using (HttpWebResponse response = (HttpWebResponse)request.GetResponse())
+            using (Stream responseStream = response.GetResponseStream())
+            using (StreamReader sr = new StreamReader(responseStream, Encoding.UTF8))
+            {
+                string responseJson = sr.ReadToEnd();
+
+                if (responseJson.Contains("username"))
+                {
+                    string username = responseJson.Substring(responseJson.IndexOf(":\"") + 2);
+                    username = username.Remove(username.Length - 3);
+                    Username = username;
+
+                    Debug.Log("User created");
+                    return;
+                }
+
+                Debug.Log("User couldn't be created. Please press the link button on the Hue Hub.");
+            }
         }
 
         /// <summary>
@@ -153,57 +161,56 @@ namespace Hue
         /// </summary>
         public void DiscoverLights()
         {
-            _stringURI = "http://" + HostName + "/api/" + Username + "/lights";
-            HttpWebRequest request = (HttpWebRequest)WebRequest.Create(_stringURI);
-            HttpWebResponse response = (HttpWebResponse)request.GetResponse();
-            Debug.Log(_stringURI);
+            string apiUri = $"http://{HostName}/api/{Username}/lights";
 
-            Stream stream = response.GetResponseStream();
-            StreamReader sr = new StreamReader(stream, System.Text.Encoding.UTF8);
-
-            string data = sr.ReadToEnd();
-            if (data.Contains("error"))
+            try
             {
-                stream.Close();
-                sr.Close();
-                response.Close();
-                Debug.Log("Error user does not exist!! ");
-                return;
-            }
-
-            var lights = (Dictionary<string, object>)Json.Deserialize(data);
-
-            foreach (string key in lights.Keys)
-            {
-
-                var light = (Dictionary<string, object>)lights[key];
-                foreach (HueLamp hueLamp in GetComponentsInChildren<HueLamp>())
-                    if (hueLamp.Key.Equals(key)) goto Found;
-                      
-
-                if (light[_type].Equals(_extend))
+                using (HttpWebResponse response = (HttpWebResponse)WebRequest.Create(apiUri).GetResponse())
+                using (Stream stream = response.GetResponseStream())
+                using (StreamReader sr = new StreamReader(stream, System.Text.Encoding.UTF8))
                 {
-                    GameObject obj = new GameObject((string)light[_name], typeof(HueLamp));
-                    obj.transform.parent = transform;
-                    obj.GetComponent<HueLamp>().Setup(_stringURI + "/" + key + _state, key);
+                    string data = sr.ReadToEnd();
 
-                    if (_hueLights.ContainsKey(obj.name))
+                    if (data.Contains("error"))
                     {
-                        Debug.LogWarning(obj.name + " Duplicated light detect please name each light unquie ");
-                        Destroy(obj);
+                        Debug.Log("Error: User does not exist!");
+                        return;
                     }
-                    else
-                        _hueLights.Add(obj.name, obj.GetComponent<HueLamp>());
-                }
 
-            Found:
-                ;
+                    var lights = (Dictionary<string, object>)Json.Deserialize(data);
+
+                    foreach (string key in lights.Keys)
+                    {
+                        if (GetComponentsInChildren<HueLamp>().Any(hueLamp => hueLamp.Key.Equals(key)))
+                        {
+                            continue; // Skip the rest of the loop iteration if duplicate is found
+                        }
+
+                        var light = (Dictionary<string, object>)lights[key];
+
+                        if (light[_type].Equals(_extend))
+                        {
+                            GameObject obj = new GameObject((string)light[_name], typeof(HueLamp));
+                            obj.transform.parent = transform;
+                            obj.GetComponent<HueLamp>().Setup($"{apiUri}/{key}{_state}", key);
+
+                            if (_hueLights.ContainsKey(obj.name))
+                            {
+                                Debug.LogWarning($"{obj.name} Duplicated light detected. Please name each light uniquely.");
+                                Destroy(obj);
+                            }
+                            else
+                            {
+                                _hueLights.Add(obj.name, obj.GetComponent<HueLamp>());
+                            }
+                        }
+                    }
+                }
             }
-            stream.Close();
-            sr.Close();
-            response.Close();
-            GC.Collect();
-            
+            catch (Exception e)
+            {
+                Debug.LogError($"Failed to discover lights: {e.Message}");
+            }
         }
 
         /// <summary>
@@ -217,21 +224,25 @@ namespace Hue
                 Debug.Log("Hue Config file does not exist");
                 return;
             }
+
             string dataAsJson = File.ReadAllText(path);
-            HueConfig Config = JsonUtility.FromJson<HueConfig>(dataAsJson);
+            HueConfig config = JsonUtility.FromJson<HueConfig>(dataAsJson);
             Debug.Log("Hue Config File Loaded");
-            Username = Config.Username;
-            HostName = Config.HostName;
+
+            Username = config.Username;
+            HostName = config.HostName;
             DiscoverLights();
-            foreach (LightUse light in Config.Lights)
+
+            foreach (LightUse light in config.Lights)
             {
                 if (_hueLights.ContainsKey(light.LightName))
+                {
                     _hueLights[light.LightName].UseLight = light.UseLight;
+                }
             }
 
             Debug.Log("Hue Configured");
             FinishConfiguringHue?.Invoke();
-            return;
         }
 
         /// <summary>
@@ -244,8 +255,9 @@ namespace Hue
             Config.Username = Username;
             Config.HostName = HostName;
             Config.Lights = new List<LightUse>();
-            var HueLamp = FindObjectsOfType<HueLamp>();
-            foreach (HueLamp lamp in HueLamp)
+            
+            HueLamp[] hueLamps = FindObjectsOfType<HueLamp>();
+            foreach (HueLamp lamp in hueLamps)
             {
                 LightUse light;
                 light.LightName = lamp.gameObject.name;
@@ -254,10 +266,11 @@ namespace Hue
             }
 
             string dataAsJson = JsonUtility.ToJson(Config, true);
+            Debug.Log(dataAsJson);
             File.WriteAllText(path, dataAsJson);
             Debug.Log("Hue Config File Saved!!");
-            return;
         }
+        
         #endregion
 
     }

@@ -1,4 +1,4 @@
-﻿/* Copyright (c) 2020 Scott Tongue
+﻿/* Copyright (c) 2023 Scott Tongue
  *
  * 
  * Heavily modifed based on Marc Teyssier Hue Light intergration
@@ -172,7 +172,7 @@ namespace Hue
             Debug.Log(DevicePath);
             request.Method = HueCommonNames.Put;
 
-            //get color state ready for hue in HSV in JSON format
+            // Get color state ready for Hue in HSV in JSON format
             _state.Clear();
             Vector3 hsv = HSVFromRGB.ConvertToHSV(color);
             _state[HueCommonNames.Put] = true;
@@ -186,16 +186,17 @@ namespace Hue
                 TurnedOn = false;
             }
             else
-                TurnedOn = false;
+            {
+                TurnedOn = true;
+            }
 
             byte[] data = System.Text.Encoding.ASCII.GetBytes(Json.Serialize(_state));
             request.ContentLength = data.Length;
 
-            Stream s = request.GetRequestStream();
-            s.Write(data, 0, data.Length);
-            s.Close();
-            HttpWebResponse response = (HttpWebResponse)request.GetResponse();
-            response.Close();
+            using (Stream requestStream = request.GetRequestStream())
+            {
+                requestStream.Write(data, 0, data.Length);
+            }
         }
 
         private void HTTPStream(bool turnOn)
@@ -203,17 +204,17 @@ namespace Hue
             HttpWebRequest request = (HttpWebRequest)WebRequest.Create(DevicePath);
             Debug.Log(DevicePath);
             request.Method = HueCommonNames.Put;
+
             _state.Clear();
             _state[HueCommonNames.Put] = turnOn;
 
             byte[] data = System.Text.Encoding.ASCII.GetBytes(Json.Serialize(_state));
             request.ContentLength = data.Length;
 
-            Stream s = request.GetRequestStream();
-            s.Write(data, 0, data.Length);
-            s.Close();
-            HttpWebResponse response = (HttpWebResponse)request.GetResponse();
-            response.Close();
+            using (Stream requestStream = request.GetRequestStream())
+            {
+                requestStream.Write(data, 0, data.Length);
+            }
         }
 
         private void HTTPStream(int brightness)
@@ -221,6 +222,7 @@ namespace Hue
             HttpWebRequest request = (HttpWebRequest)WebRequest.Create(DevicePath);
             Debug.Log(DevicePath);
             request.Method = HueCommonNames.Put;
+
             _state.Clear();
             _state[HueCommonNames.Put] = true;
             _state[HueCommonNames.Bri] = brightness;
@@ -228,17 +230,18 @@ namespace Hue
             byte[] data = System.Text.Encoding.ASCII.GetBytes(Json.Serialize(_state));
             request.ContentLength = data.Length;
 
-            Stream s = request.GetRequestStream();
-            s.Write(data, 0, data.Length);
-            s.Close();
-            HttpWebResponse response = (HttpWebResponse)request.GetResponse();
-            response.Close();
+            using (Stream requestStream = request.GetRequestStream())
+            {
+                requestStream.Write(data, 0, data.Length);
+            }
+
         }
 
         private async void FlashColor(Color flashColor, float time, int count)
         {
             _inUse = true;
             Color startingColor = CurrentColor;
+
             while (count >= 0)
             {
                 SendData(flashColor);
@@ -247,6 +250,7 @@ namespace Hue
                 await Task.Delay(TimeSpan.FromSeconds(time));
                 count--;
             }
+
             _inUse = false;
         }
         #endregion
