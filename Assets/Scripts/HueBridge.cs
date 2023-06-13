@@ -35,6 +35,7 @@ using MiniJSON;
 using System;
 using System.Linq;
 using System.Text;
+using System.Text.RegularExpressions;
 
 namespace Hue
 {
@@ -124,17 +125,18 @@ namespace Hue
             {
                 requestStream.Write(requestData, 0, requestData.Length);
             }
-
+         
             using (HttpWebResponse response = (HttpWebResponse)request.GetResponse())
             using (Stream responseStream = response.GetResponseStream())
             using (StreamReader sr = new StreamReader(responseStream, Encoding.UTF8))
             {
                 string responseJson = sr.ReadToEnd();
-
-                if (responseJson.Contains("username"))
+                Debug.Log(responseJson);
+                Regex regex = new Regex("\"username\":\"([^\"]+)\"");
+                Match match = regex.Match(responseJson);
+                if (match.Success)
                 {
-                    string username = responseJson.Substring(responseJson.IndexOf(":\"") + 2);
-                    username = username.Remove(username.Length - 3);
+                    string username = match.Groups[1].Value;
                     Username = username;
 
                     Debug.Log("User created");
@@ -192,7 +194,8 @@ namespace Hue
                         {
                             GameObject obj = new GameObject((string)light[_name], typeof(HueLamp));
                             obj.transform.parent = transform;
-                            obj.GetComponent<HueLamp>().Setup($"{apiUri}/{key}{_state}", key);
+                            HueLamp hueLampComponent = obj.GetComponent<HueLamp>();
+                            hueLampComponent.Setup($"{apiUri}/{key}{_state}", key);
 
                             if (_hueLights.ContainsKey(obj.name))
                             {
@@ -201,7 +204,7 @@ namespace Hue
                             }
                             else
                             {
-                                _hueLights.Add(obj.name, obj.GetComponent<HueLamp>());
+                                _hueLights.Add(obj.name, hueLampComponent);
                             }
                         }
                     }
