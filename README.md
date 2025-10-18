@@ -1,5 +1,5 @@
 # Unity_Philips_hue
-Philips Hue Lighting Integration for Unity 2019.4.X -2022.3.X 
+Philips Hue Lighting Integration for Unity 2019.4.X -2022.3.X and Unity 6
 
 Require Philips Hue Hub
 
